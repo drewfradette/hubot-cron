@@ -2,8 +2,6 @@
 #   register cron jobs to schedule messages on the current channel
 #
 # Commands:
-#   hubot new job "<crontab format>" <message>   - Schedule a cron job to say something
-#   hubot new job <crontab format> "<message>"   - Ditto
 #   hubot new job <cronrab format> say <message> - Ditto
 #   hubot list jobs - List current cron jobs
 #   hubot remove job <id> - remove job
@@ -53,22 +51,18 @@ module.exports = (robot) ->
     for own id, job of robot.brain.data.cronjob
       registerNewJobFromBrain robot, id, job...
 
-  robot.respond /(?:new|add) job "(.*?)" (.*)$/i, (msg) ->
-    handleNewJob robot, msg, msg.match[1], msg.match[2]
-
-  robot.respond /(?:new|add) job (.*) "(.*?)" *$/i, (msg) ->
-    handleNewJob robot, msg, msg.match[1], msg.match[2]
-
   robot.respond /(?:new|add) job (.*?) say (.*?) *$/i, (msg) ->
     handleNewJob robot, msg, msg.match[1], msg.match[2]
 
   robot.respond /(?:list|ls) jobs?/i, (msg) ->
-    text = ''
+    output = false
     for id, job of JOBS
       room = job.user.reply_to || job.user.room
       if room == msg.message.user.reply_to or room == msg.message.user.room
-        text += "#{id}: #{job.pattern} @#{room} \"#{job.message}\"\n"
-    msg.send text if text.length > 0
+        output = true
+        msg.send "#{id}: #{job.pattern} #{job.message}"
+
+    msg.send "No jobs have been created." if output == false
 
   robot.respond /(?:rm|remove|del|delete) job (\d+)/i, (msg) ->
     if (id = msg.match[1]) and unregisterJob(robot, id)
